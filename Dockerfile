@@ -6,6 +6,7 @@ LABEL description "Simple mailserver in a mono Docker image" \
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    mysql-server nginx \
     postfix postfix-mysql \
     dovecot-core dovecot-imapd dovecot-mysql dovecot-pop3d \
     && rm -rf /var/spool/postfix \
