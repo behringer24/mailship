@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  mailship:
+    build: .
+    volumes:
+      - ../sportanalytix-assets/videos:/var/www/site/web/videos
+    expose:
+      - 80
+    restart: always
+    container_name: mailship
