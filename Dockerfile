@@ -6,8 +6,8 @@ LABEL description "Simple mailserver in a mono Docker image" \
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SQLITE_PATH=/srv/postfixadmin/database
 
-ENV POSTFIXADMIN_DB_TYPE=mysqli \
-    POSTFIXADMIN_DB_HOST=whatever \
+ENV POSTFIXADMIN_DB_TYPE=sqlite \
+    POSTFIXADMIN_DB_HOST=/var/mail.db \
     POSTFIXADMIN_DB_USER=user \
     POSTFIXADMIN_DB_PASSWORD=topsecret \
     POSTFIXADMIN_DB_NAME=postfixadmin
@@ -36,8 +36,10 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
 
+RUN service nginx start
 RUN service dovecot start
 RUN service postfix start
+
 #RUN ln -s /srv/postfixadmin/public /var/www/html/postfixadmin
 #RUN mkdir /srv/postfixadmin
 #RUN mkdir /srv/postfixadmin/database
