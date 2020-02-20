@@ -12,8 +12,6 @@ ENV POSTFIXADMIN_DB_TYPE=sqlite \
     POSTFIXADMIN_DB_PASSWORD=topsecret \
     POSTFIXADMIN_DB_NAME=postfixadmin
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 # Set PHP install sources
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates apt-transport-https wget gnupg2 && \
@@ -36,9 +34,17 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
 
-RUN service nginx start
-RUN service dovecot start
-RUN service postfix start
+# Install debug packages // remove in prod
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    procps \
+    nano \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
+
+#SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+COPY config/start.sh /usr/local/bin/
 
 #RUN ln -s /srv/postfixadmin/public /var/www/html/postfixadmin
 #RUN mkdir /srv/postfixadmin
@@ -48,4 +54,4 @@ RUN service postfix start
 
 EXPOSE 25 143 465 587 993 4190 11334 80
 
-CMD ["/bin/bash"]
+CMD ["start.sh"]
