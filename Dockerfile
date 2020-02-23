@@ -56,13 +56,6 @@ COPY config/default /etc/nginx/sites-available
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY config/config.local.php /var/www/html
 
-#RUN ln -s /srv/postfixadmin/public /var/www/html/postfixadmin
-#RUN mkdir /srv/postfixadmin
-#RUN mkdir /srv/postfixadmin/database
-#RUN touch /srv/postfixadmin/database/postfixadmin.db
-#RUN chown -R www-data:www-data /srv/postfixadmin/database
-
 EXPOSE 25 143 465 587 993 4190 11334 80
 
-CMD ["entrypoint.sh"]
-#CMD ["/usr/bin/supervisord", "-n"]
+CMD ["/usr/bin/supervisord", "-n"]
