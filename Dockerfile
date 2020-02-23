@@ -51,7 +51,6 @@ RUN apt-get update && apt-get install -y -q \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY config/entrypoint.sh /usr/local/bin/
 COPY config/default /etc/nginx/sites-available
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY config/config.local.php /var/www/html
