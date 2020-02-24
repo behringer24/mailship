@@ -6,7 +6,7 @@ services:
     image: behringer24/mailship
     volumes:
       - ../sportanalytix-assets/videos:/var/www/site/web/videos
-    expose:
+    ports:
       - 80
       - 25
       - 143
