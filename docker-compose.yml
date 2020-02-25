@@ -5,15 +5,22 @@ services:
     build: .
     image: behringer24/mailship
     volumes:
-      - ../sportanalytix-assets/videos:/var/www/site/web/videos
+      - spool_mail:/var/spool/mail
+      - spool_postfix:/var/spool/postfix
+      - sqlite:/etc/postfix/sqlite
     ports:
-      - 80
-      - 25
-      - 143
-      - 465
-      - 587
-      - 993
-      - 4190
-      - 11334
+      - "80:80"
+      - "25:25"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "4190:4190"
+      - "11334:11334"
     restart: always
     container_name: mailship
+
+volumes:
+  spool_mail:
+  spool_postfix:
+  sqlite:
