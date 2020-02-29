@@ -28,7 +28,10 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     supervisor \
     opendkim opendkim-tools \
     dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d \
-    php-fpm php-cli php-mbstring php-imap php-sqlite3
+    php-fpm php-cli php-mbstring php-imap php-sqlite3 \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
 
 # Setup database and path
 RUN mkdir /run/php \
@@ -37,9 +40,9 @@ RUN mkdir /run/php \
     && chown -R www-data:www-data ${SQLITE_PATH} \
     && mkdir /var/www/html/templates_c \
     && chown -R www-data:www-data /var/www/html/templates_c \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
+    && usermod -u 1001 dovecot \
+    && groupmod -g 1001 mail \
+    && chgrp mail /var/mail
 
 # Install postfixadmin
 RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-3.2.3.tar.gz" \
@@ -48,13 +51,16 @@ RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixad
 # Install debug packages // remove in prod
 RUN apt-get update && apt-get install -y -q \
     procps \
-    nano
+    nano \
+    sqlite3
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 COPY config/default /etc/nginx/sites-available
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY config/config.local.php /var/www/html
+COPY config/dovecot.conf /etc/dovecot
+COPY config/dovecot-sql.conf /etc/dovecot
 
 VOLUME ["spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 
