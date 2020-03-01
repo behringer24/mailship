@@ -56,11 +56,11 @@ RUN apt-get update && apt-get install -y -q \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY config/default /etc/nginx/sites-available
-COPY config/supervisord.conf /etc/supervisord.conf
-COPY config/config.local.php /var/www/html
-COPY config/dovecot.conf /etc/dovecot
-COPY config/dovecot-sql.conf /etc/dovecot
+COPY config/nginx/default /etc/nginx/sites-available
+COPY config/supervisor/supervisord.conf /etc/supervisord.conf
+COPY config/postfixadmin/config.local.php /var/www/html/
+COPY config/dovecot/* /etc/dovecot/
+COPY config/postfix/* /etc/postfix/
 
 VOLUME ["spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 
