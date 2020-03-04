@@ -51,8 +51,8 @@ verify    unix  -       -       n       -       1       verify
 flush     unix  n       -       n       1000?   0       flush
 proxymap  unix  -       -       n       -       -       proxymap
 proxywrite unix -       -       n       -       1       proxymap
-smtp      unix  -       -       n       -       -       smtp -v
-relay     unix  -       -       n       -       -       smtp -v
+smtp      unix  -       -       n       -       -       smtp
+relay     unix  -       -       n       -       -       smtp
         -o syslog_name=postfix/$service_name
 #       -o smtp_helo_timeout=5 -o smtp_connect_timeout=5
 showq     unix  n       -       n       -       -       showq
@@ -61,7 +61,7 @@ retry     unix  -       -       n       -       -       error
 discard   unix  -       -       n       -       -       discard
 local     unix  -       n       n       -       -       local
 virtual   unix  -       n       n       -       -       virtual
-lmtp      unix  -       -       n       -       -       lmtp -v
+lmtp      unix  -       -       n       -       -       lmtp
 anvil     unix  -       -       n       -       1       anvil
 scache    unix  -       -       n       -       1       scache
 postlog   unix-dgram n  -       n       -       1       postlogd
