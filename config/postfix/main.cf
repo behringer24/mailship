@@ -1,5 +1,4 @@
 maillog_file = /dev/stdout
-#myhostname = $(hostname -A)
 
 virtual_mailbox_domains = sqlite:/etc/postfix/sqlite_virtual_domains_maps.cf
 virtual_alias_maps =  sqlite:/etc/postfix/sqlite_virtual_alias_maps.cf, sqlite:/etc/postfix/sqlite_virtual_alias_domain_maps.cf, sqlite:/etc/postfix/sqlite_virtual_alias_domain_catchall_maps.cf
@@ -15,7 +14,8 @@ smtpd_sasl_path = private/auth
 smtpd_sasl_auth_enable = yes
 smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination
 
-mydestination = localhost
+myorigin = $myhostname
+mydestination = $myhostname, localhost.$mydomain, localhost
 mynetworks = 127.0.0.0/8
 inet_protocols = ipv4
 
