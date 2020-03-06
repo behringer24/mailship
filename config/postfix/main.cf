@@ -9,6 +9,8 @@ smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
 smtpd_use_tls = yes
 smtpd_tls_auth_only = yes
 
+smtp_tls_security_level = may
+
 smtpd_sasl_type = dovecot
 smtpd_sasl_path = private/auth
 smtpd_sasl_auth_enable = yes

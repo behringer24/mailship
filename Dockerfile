@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
 
-# Setup database and path
+# Setup SQLite database and paths
 RUN mkdir /run/php \
     && mkdir /etc/postfix/sqlite \
     && touch ${SQLITE_DB} \
@@ -44,7 +44,7 @@ RUN mkdir /run/php \
     && groupmod -g 1001 mail \
     && chgrp mail /var/mail
 
-# Install postfixadmin
+# Install postfixadmin from source and extract to docroot
 RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-3.2.3.tar.gz" \
      | tar -xvzf - -C /var/www/html --strip-components=1
 
