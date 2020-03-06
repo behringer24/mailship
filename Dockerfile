@@ -61,6 +61,11 @@ COPY config/supervisor/supervisord.conf /etc/supervisord.conf
 COPY config/postfixadmin/config.local.php /var/www/html/
 COPY config/dovecot/* /etc/dovecot/
 COPY config/postfix/* /etc/postfix/
+COPY config/opendkim/opendkim /etc/default/
+COPY config/opendkim/opendkim.conf /etc/
+COPY config/opendkim/key.table /etc/opendkim/
+COPY config/opendkim/signing.table /etc/opendkim/
+COPY config/opendkim/trusted /etc/opendkim/
 
 VOLUME ["spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 

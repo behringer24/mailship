@@ -1,0 +1,2 @@
+# The key 'yourdomain' is stored in file /etc/opendkim/keys/yourdomain.private
+yourdomain yourdomain.tld:201611:/etc/opendkim/keys/yourdomain.private
