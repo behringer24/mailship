@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     nginx \
     supervisor \
     opendkim opendkim-tools \
-    dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d \
+    dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d dovecot-lmtpd \
     php-fpm php-cli php-mbstring php-imap php-sqlite3 \
     && apt-get autoremove -y \
     && apt-get clean \

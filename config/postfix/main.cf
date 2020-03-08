@@ -21,4 +21,4 @@ mydestination = $myhostname, localhost.$mydomain, localhost
 mynetworks = 127.0.0.0/8
 inet_protocols = ipv4
 
-virtual_transport = dovecot
+virtual_transport = lmtp:unix:private/dovecot-lmtp
