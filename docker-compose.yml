@@ -4,10 +4,17 @@ services:
   mailship:
     build: .
     image: behringer24/mailship
+    environment: 
+      - POSTFIXADMIN_SETUP_PASSWORD=9aaddf10eaca196b343f17ca5de9a886:8a051a4b7876fe321d5ae47271bc17b1327ada60
     volumes:
+      - mail_dir:/var/vmail
       - spool_mail:/var/spool/mail
       - spool_postfix:/var/spool/postfix
       - sqlite:/etc/postfix/sqlite
+# Uncomment to use postfixadmin behind a reverse proxy but
+# expose the mail ports directly
+#    expose:
+#      - 80:
     ports:
       - "80:80"
       - "25:25"
@@ -21,6 +28,7 @@ services:
     container_name: mailship
 
 volumes:
+  mail_dir:
   spool_mail:
   spool_postfix:
   sqlite:
