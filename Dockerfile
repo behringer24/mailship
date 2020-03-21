@@ -4,15 +4,15 @@ LABEL description "Simple mailserver in a mono Docker image" \
       maintainer "behringer24 <abe@activecube.de>"
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG SQLITE_PATH=/etc/postfix/sqlite
-ARG SQLITE_DB=${SQLITE_PATH}/postfixadmin.db
 
-ENV POSTFIXADMIN_DB_TYPE=sqlite \
-    POSTFIXADMIN_DB_HOST=${SQLITE_DB} \
-    POSTFIXADMIN_DB_USER=user \
-    POSTFIXADMIN_DB_PASSWORD=topsecret \
-    POSTFIXADMIN_DB_NAME=postfixadmin
-
+ENV SQLITE_PATH=/etc/postfix/sqlite
+ENV SQLITE_DB=${SQLITE_PATH}/postfixadmin.db
+ENV POSTFIXADMIN_DB_TYPE=sqlite
+ENV POSTFIXADMIN_DB_HOST=${SQLITE_DB}
+ENV POSTFIXADMIN_DB_USER=user
+ENV POSTFIXADMIN_DB_PASSWORD=topsecret
+ENV POSTFIXADMIN_DB_NAME=postfixadmin
+    
 # Set PHP install sources
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates apt-transport-https wget gnupg2 \
@@ -39,15 +39,15 @@ RUN mkdir /run/php \
     && useradd -g vmail -u 5000 vmail -d /var/vmail \
     && mkdir /var/vmail \
     && chown vmail:vmail /var/vmail \
-    && mkdir /etc/postfix/sqlite \
+    && mkdir ${SQLITE_PATH} \
     && touch ${SQLITE_DB} \
-    && chown -R www-data:www-data ${SQLITE_PATH} \
-    && mkdir /var/www/html/templates_c \
-    && chown -R www-data:www-data /var/www/html/templates_c 
+    && chown -R www-data:www-data ${SQLITE_PATH}
 
 # Install postfixadmin from source and extract to docroot
 RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-3.2.3.tar.gz" \
-     | tar -xvzf - -C /var/www/html --strip-components=1
+     | tar -xvzf - -C /var/www/html --strip-components=1 \
+    && mkdir /var/www/html/templates_c \
+    && chown -R www-data:www-data /var/www/html/templates_c 
 
 # Install debug packages // remove in prod
 RUN apt-get update && apt-get install -y -q \
@@ -67,6 +67,7 @@ COPY config/opendkim/opendkim.conf /etc/
 COPY config/opendkim/key.table /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
+COPY config/php/* /etc/php/7.4/fpm/pool.d/
 
 VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 
