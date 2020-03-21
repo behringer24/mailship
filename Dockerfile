@@ -35,14 +35,15 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
 
 # Setup SQLite database and paths
 RUN mkdir /run/php \
+    && groupadd -g 5000 vmail \
+    && useradd -g vmail -u 5000 vmail -d /var/vmail \
+    && mkdir /var/vmail \
+    && chown vmail:vmail /var/vmail \
     && mkdir /etc/postfix/sqlite \
     && touch ${SQLITE_DB} \
     && chown -R www-data:www-data ${SQLITE_PATH} \
     && mkdir /var/www/html/templates_c \
-    && chown -R www-data:www-data /var/www/html/templates_c \
-    && usermod -u 1001 dovecot \
-    && groupmod -g 1001 mail \
-    && chgrp mail /var/mail
+    && chown -R www-data:www-data /var/www/html/templates_c 
 
 # Install postfixadmin from source and extract to docroot
 RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-3.2.3.tar.gz" \
@@ -67,7 +68,7 @@ COPY config/opendkim/key.table /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
 
-VOLUME ["spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
+VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 
 EXPOSE 25 143 465 587 993 4190 11334 80
 
