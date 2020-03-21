@@ -12,6 +12,8 @@ ENV POSTFIXADMIN_DB_HOST=${SQLITE_DB}
 ENV POSTFIXADMIN_DB_USER=user
 ENV POSTFIXADMIN_DB_PASSWORD=topsecret
 ENV POSTFIXADMIN_DB_NAME=postfixadmin
+ENV SSL_CERT=</etc/dovecot/private/dovecot.pem
+ENV SSL_KEY=</etc/dovecot/private/dovecot.key
     
 # Set PHP install sources
 RUN apt-get update \
@@ -53,7 +55,8 @@ RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixad
 RUN apt-get update && apt-get install -y -q \
     procps \
     nano \
-    sqlite3
+    sqlite3 \
+    less
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
