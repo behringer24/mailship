@@ -1,5 +1,8 @@
 maillog_file = /dev/stdout
 
+import_environment = MAIL_CONFIG MAIL_DEBUG MAIL_LOGTAG TZ XAUTHORITY DISPLAY LANG=C POSTLOG_SERVICE POSTLOG_HOSTNAME POSTFIXADMIN_DB_TYPE SQLITE_DB SSL_CERT SSL_KEY POSTMASTER_ADDRESS
+export_environment = TZ MAIL_CONFIG LANG POSTFIXADMIN_DB_TYPE SQLITE_DB SSL_CERT SSL_KEY POSTMASTER_ADDRESS
+
 disable_vrfy_command = yes
 
 virtual_mailbox_domains = sqlite:/etc/postfix/sqlite_virtual_domains_maps.cf
