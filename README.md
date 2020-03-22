@@ -30,10 +30,6 @@ services:
       - spool_mail:/var/spool/mail
       - spool_postfix:/var/spool/postfix
       - sqlite:/etc/postfix/sqlite
-# Uncomment to use postfixadmin behind a reverse proxy but
-# expose the mail ports directly
-#    expose:
-#      - 80:
     ports:
       - "80:80"
       - "25:25"
