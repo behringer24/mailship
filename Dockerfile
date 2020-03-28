@@ -49,6 +49,10 @@ RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixad
     && mkdir /var/www/html/templates_c \
     && chown -R www-data:www-data /var/www/html/templates_c 
 
+# Install envproc config file preprocessor
+ADD https://raw.githubusercontent.com/behringer24/envproc/master/envproc /usr/local/bin/
+RUN chmod a+x /usr/local/bin/envproc
+
 # Install debug packages // remove in prod
 RUN apt-get update && apt-get install -y -q \
     procps \
