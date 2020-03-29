@@ -1,0 +1,2 @@
+# Tell linguist that tpl is for Docker/Configuration:
+*.tpl linguist-language=Dockerfile
