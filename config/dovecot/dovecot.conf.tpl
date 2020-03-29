@@ -28,7 +28,7 @@ service auth {
 
 ssl = yes
 ssl_cert = <${env:SSL_CERT}
-ssl_key = <$env{env:SSL_KEY}
+ssl_key = <${env:SSL_KEY}
 
 userdb {
   args = /etc/dovecot/dovecot-sql.conf

@@ -23,6 +23,7 @@ RUN apt-get update \
 
 # Install packages
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    make \
     postfix postfix-sqlite \
     nginx \
     supervisor \
@@ -62,6 +63,7 @@ RUN apt-get update && apt-get install -y -q \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY config/make/Makefile /root/
 COPY config/nginx/default /etc/nginx/sites-available
 COPY config/supervisor/supervisord.conf /etc/supervisord.conf
 COPY config/postfixadmin/config.local.php /var/www/html/
@@ -78,4 +80,5 @@ VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/
 
 EXPOSE 25 143 465 587 993 4190 11334 80
 
-CMD ["/usr/bin/supervisord", "-n"]
+CMD make -C ~ \
+    && /usr/bin/supervisord -n
