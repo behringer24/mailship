@@ -32,12 +32,10 @@
 # );
 
 # Database driver: mysql, pgsql, sqlite
-driver = sqlite
-#driver = %{env:POSTFIXADMIN_DB_TYPE}
+driver = ${env:POSTFIXADMIN_DB_TYPE}
 
 # Database connection string. This is driver-specific setting.
-connect = /etc/postfix/sqlite/postfixadmin.db
-#connect = %{env:SQLITE_DB}
+connect = ${env:SQLITE_DB}
 
 # Default password scheme.
 #
