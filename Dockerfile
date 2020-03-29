@@ -12,8 +12,6 @@ ENV POSTFIXADMIN_DB_HOST=${SQLITE_DB}
 ENV POSTFIXADMIN_DB_USER=user
 ENV POSTFIXADMIN_DB_PASSWORD=topsecret
 ENV POSTFIXADMIN_DB_NAME=postfixadmin
-ENV SSL_CERT=</etc/dovecot/private/dovecot.pem
-ENV SSL_KEY=</etc/dovecot/private/dovecot.key
     
 # Set PHP install sources
 RUN apt-get update \
@@ -25,6 +23,7 @@ RUN apt-get update \
 
 # Install packages
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    make \
     postfix postfix-sqlite \
     nginx \
     supervisor \
@@ -51,6 +50,10 @@ RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixad
     && mkdir /var/www/html/templates_c \
     && chown -R www-data:www-data /var/www/html/templates_c 
 
+# Install envproc config file preprocessor
+ADD https://raw.githubusercontent.com/behringer24/envproc/master/envproc /usr/local/bin/
+RUN chmod a+x /usr/local/bin/envproc
+
 # Install debug packages // remove in prod
 RUN apt-get update && apt-get install -y -q \
     procps \
@@ -60,6 +63,7 @@ RUN apt-get update && apt-get install -y -q \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY config/make/Makefile /root/
 COPY config/nginx/default /etc/nginx/sites-available
 COPY config/supervisor/supervisord.conf /etc/supervisord.conf
 COPY config/postfixadmin/config.local.php /var/www/html/
@@ -76,4 +80,5 @@ VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/
 
 EXPOSE 25 143 465 587 993 4190 11334 80
 
-CMD ["/usr/bin/supervisord", "-n"]
+CMD make -C ~ \
+    && /usr/bin/supervisord -n
