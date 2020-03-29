@@ -6,10 +6,9 @@ services:
     image: behringer24/mailship
     environment: 
       POSTFIXADMIN_SETUP_PASSWORD: 
-      SSL_CERT: /etc/ssl/certs/ssl-cert-snakeoil.pem
-      SSL_KEY: /etc/ssl/private/ssl-cert-snakeoil.key
-#      SSL_CERT: /etc/dovecot/private/dovecot.pem
-#      SSL_KEY: /etc/dovecot/private/dovecot.key
+      SSL_CERT: /etc/dovecot/private/dovecot.pem
+      SSL_KEY: /etc/dovecot/private/dovecot.key
+      MAIL_HOST: example.com
       POSTMASTER_ADDRESS: postmaster@example.com
     volumes:
       - mail_dir:/var/vmail
