@@ -21,10 +21,13 @@ version: "3"
 
 services:
   mailship:
-    build: .
-    image: behringer24/mailship
+    image: behringer24/mailship:latest
     environment: 
       POSTFIXADMIN_SETUP_PASSWORD: 
+      SSL_CERT: /etc/dovecot/private/dovecot.pem
+      SSL_KEY: /etc/dovecot/private/dovecot.key
+      MAIL_HOST: example.com
+      POSTMASTER_ADDRESS: postmaster@example.com
     volumes:
       - mail_dir:/var/vmail
       - spool_mail:/var/spool/mail
@@ -68,22 +71,27 @@ If you want to run the port 80 behind a reverse proxy, then expose port 80 inste
 
 The volumes are importand to persist the emails and configuration.
 
-When the server is running the container go to your <postfixadmin domain>/setup.php (port 80 of the container) and set a setup password. Postfixadmin tells you to put the generated hash into the config.php file. Please copy that hash into your docker-compose.yml behind POSTFIXADMIN_SETUP_PASSWORD:
+### Configuring postfixadmin
+When the server is running the container go to your `<postfixadmin domain>/setup.php` (port 80 of the container) and set a setup password. Postfixadmin tells you to put the generated hash into the config.php file. Please copy that hash into your docker-compose.yml behind POSTFIXADMIN_SETUP_PASSWORD:
 
 ``` yml
 [...]
 services:
   mailship:
-    build: .
-    image: behringer24/mailship
+    image: behringer24/mailship:latest
     environment: 
       POSTFIXADMIN_SETUP_PASSWORD: <yourhashhere>
-    volumes:
-      - mail_dir:/var/vmail
-      - spool_mail:/var/spool/mail
-      - spool_postfix:/var/spool/postfix
-      - sqlite:/etc/postfix/sqlite
 [...]
 ```
 
-Now go to your <postfixadmin domain>/setup.php again and set up an admin account. after that you can go to /login.php and start configuring your server.
+Now go to your `<postfixadmin domain>/setup.php` again and set up an admin account. after that you can go to /login.php and start configuring your server.
+
+### Environment variables
+The setup can be configured via environment variables.
+
+| Variable | Description |
+| --- | --- |
+| `POSTFIXADMIN_SETUP_PASSWORD` | Described above. Used to set the admin key in postfixadmin during the setup process |
+| `SSL_CERT` | Path to the SSL certificate file to use in postfix and dovecot |
+| `SSL_KEY` | Path to the SSL key file to use in postfix and dovecot |
+| `POSTMASTER_ADDRESS` | E-mail adress of your account like postmaster@example.com |
