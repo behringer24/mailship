@@ -5,12 +5,13 @@
 ![Github stars](https://img.shields.io/github/stars/behringer24/mailship.svg?label=github%20%E2%98%85)
 
 # mailship
-Mailship is a single Docker container e-mail solution. Mailship can be used as simple standalone server or just as a solution for pulling e-mails to the big webail providers. Configuration is done by postfixadmin, a simple web UI to configure domains and mailboxes. The data is stored in sqlite and for the mail serving postfix and dovecot is used.
+Mailship is a single Docker container e-mail solution. Mailship can be used as simple standalone server or just as a solution for pulling e-mails to the big webmail providers. Configuration is done by postfixadmin, a simple web UI to configure domains and mailboxes. The data is stored in sqlite and for the mail serving postfix and dovecot is used.
 
 ## Usecase
 * Hosting your own webpage and info@your-domain.com style e-mail adresses.
 * Have this server behind a reverse proxy that handles all the SSL stuff.
-* No webmailer, antivirus or spam protection is included as the e-mails are pulled into well known big e-mail providers who know that stuff better.
+* No webmailer, antivirus or spam protection is included.
+* Having multiple services in one container is an antipattern and I know that. Just interpret "mail" as one service ;-)
 
 ## Getting set up
 ### docker-compose.yml
