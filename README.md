@@ -95,3 +95,4 @@ The setup can be configured via environment variables.
 | `SSL_CERT` | Path to the SSL certificate file to use in postfix and dovecot |
 | `SSL_KEY` | Path to the SSL key file to use in postfix and dovecot |
 | `POSTMASTER_ADDRESS` | E-mail adress of your account like postmaster@example.com |
+
