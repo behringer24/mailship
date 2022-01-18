@@ -52,5 +52,6 @@ auth_debug_passwords = yes
 auth_verbose = yes
 auth_verbose_passwords = plain
 verbose_ssl = yes
+disable_plaintext_auth = no
 
 mail_location = maildir:/var/vmail/%d/%n
