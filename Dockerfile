@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     supervisor \
     opendkim opendkim-tools \
     dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d dovecot-lmtpd \
-    php-fpm php-cli php-mbstring php-imap php-sqlite3 \
+    php7.4-fpm php7.4-cli php7.4-mbstring php7.4-imap php7.4-sqlite3 \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old

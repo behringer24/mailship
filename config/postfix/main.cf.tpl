@@ -31,6 +31,7 @@ smtpd_sender_restrictions = reject_authenticated_sender_login_mismatch, reject_u
 smtpd_sender_login_maps = proxy:${env:POSTFIXADMIN_DB_TYPE}:/etc/postfix/sqlite_sender_login_maps.cf
 broken_sasl_auth_clients = yes
 
+myhostname = ${env:MAIL_HOST}
 myorigin = $myhostname
 mydestination = $myhostname, localhost.$mydomain, localhost
 mynetworks = 127.0.0.0/8
