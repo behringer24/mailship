@@ -91,4 +91,6 @@ services:
 [...]
 ```
 
+IMPORTANT: Postfixadmin since version 3 generates Hashes with '$'. You have to make them double $ so it works in the docker-compose.yml! Every $ in the hash must be changed to $$. Otherwise you get an error when you do docker-compose up -d
+  
 Now go to your <postfixadmin domain>/setup.php again and set up an admin account. after that you can go to /login.php and start configuring your server.
