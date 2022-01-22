@@ -45,7 +45,7 @@ RUN mkdir /run/php \
     && chown -R www-data:www-data ${SQLITE_PATH}
 
 # Install postfixadmin from source and extract to docroot
-RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-3.2.3.tar.gz" \
+RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/refs/tags/postfixadmin-3.3.10.tar.gz" \
      | tar -xvzf - -C /var/www/html --strip-components=1 \
     && mkdir /var/www/html/templates_c \
     && chown -R www-data:www-data /var/www/html/templates_c 
