@@ -37,4 +37,7 @@ mydestination = $myhostname, localhost.$mydomain, localhost
 mynetworks = 127.0.0.0/8
 inet_protocols = ipv4
 
+mailbox_size_limit = 0
+message_size_limit = 0
+
 dovecot_destination_recipient_limit = 1
