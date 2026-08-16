@@ -1,6 +1,5 @@
 ![behringer24/mailship](https://img.shields.io/badge/behringer24-mailship-blue)
-![Docker build](https://img.shields.io/docker/cloud/build/behringer24/mailship.svg)
-![Docker automated builds](https://img.shields.io/docker/cloud/automated/behringer24/mailship.svg)
+![Docker build](https://github.com/behringer24/mailship/actions/workflows/docker-image.yml/badge.svg)
 ![Docker pulls](https://img.shields.io/docker/pulls/behringer24/mailship.svg)
 ![Github stars](https://img.shields.io/github/stars/behringer24/mailship.svg?label=github%20%E2%98%85)
 
@@ -12,6 +11,18 @@ Mailship is a single Docker container e-mail solution. Mailship can be used as s
 * Have this server behind a reverse proxy that handles all the SSL stuff.
 * No webmailer, antivirus or spam protection is included.
 * Having multiple services in one container is an antipattern and I know that. Just interpret "mail" as one service ;-)
+
+## Images
+
+Images are built by GitHub Actions and published to both registries:
+
+| Tag | Built from | Pull |
+|---|---|---|
+| `latest` | `master` | `ghcr.io/behringer24/mailship:latest` |
+| `canary` | `development` | `ghcr.io/behringer24/mailship:canary` |
+| `sha-<commit>` | every build | pin this to make a deployment reproducible |
+
+The same tags are pushed to Docker Hub as `behringer24/mailship`.
 
 ## Getting set up
 ### docker-compose.yml
