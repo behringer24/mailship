@@ -12,7 +12,20 @@ ENV POSTFIXADMIN_DB_HOST=${SQLITE_DB}
 ENV POSTFIXADMIN_DB_USER=user
 ENV POSTFIXADMIN_DB_PASSWORD=topsecret
 ENV POSTFIXADMIN_DB_NAME=postfixadmin
-    
+
+# OpenDKIM. DKIM_DOMAINS adds domains on top of the ones discovered in the
+# Postfixadmin database, for example the host name in MAIL_HOST.
+# DKIM_SELECTOR and DKIM_MILTER are referenced from templates and must always be
+# defined, because envproc aborts on an unknown variable and the container would
+# not start. The others are only read by the shell.
+ENV DKIM_DOMAINS=""
+ENV DKIM_SELECTOR=mail
+ENV DKIM_KEY_SIZE=2048
+ENV DKIM_MILTER=inet:127.0.0.1:12345
+ENV DKIM_AUTODISCOVER=true
+ENV DKIM_CHECK_INTERVAL=300
+ENV DKIM_NOTIFY_INTERVAL=86400
+
 # Set PHP install sources
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates apt-transport-https wget gnupg2 \
@@ -27,7 +40,8 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     postfix postfix-sqlite \
     nginx \
     supervisor \
-    opendkim opendkim-tools \
+    opendkim opendkim-tools dns-root-data dnsutils \
+    sqlite3 \
     dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d dovecot-lmtpd \
     php7.4-fpm php7.4-cli php7.4-mbstring php7.4-imap php7.4-sqlite3 \
     && apt-get autoremove -y \
@@ -58,7 +72,6 @@ RUN chmod a+x /usr/local/bin/envproc
 RUN apt-get update && apt-get install -y -q \
     procps \
     nano \
-    sqlite3 \
     less
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -71,10 +84,19 @@ COPY config/dovecot/* /etc/dovecot/
 COPY config/postfix/* /etc/postfix/
 COPY config/opendkim/opendkim /etc/default/
 COPY config/opendkim/opendkim.conf /etc/
-COPY config/opendkim/key.table /etc/opendkim/
+COPY config/opendkim/key.table.tpl /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
+COPY config/opendkim/dkim-sync.sh config/opendkim/dkim-watch.sh /usr/local/bin/
 COPY config/php/* /etc/php/7.4/fpm/pool.d/
+
+# The Debian package does not create the key directory, and /var/run/opendkim is
+# normally set up by systemd-tmpfiles, which does not run here -- without it
+# opendkim cannot write the PidFile from opendkim.conf.
+RUN chmod a+x /usr/local/bin/dkim-sync.sh /usr/local/bin/dkim-watch.sh \
+    && mkdir -p /etc/opendkim/keys /var/run/opendkim \
+    && chown -R opendkim:opendkim /etc/opendkim /var/run/opendkim \
+    && chmod 0700 /etc/opendkim/keys
 
 VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
 

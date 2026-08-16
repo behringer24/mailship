@@ -1,2 +1,7 @@
 # Tell linguist that tpl is for Docker/Configuration:
 *.tpl linguist-language=Dockerfile
+
+# Shell scripts run inside the image under dash and must not get CRLF endings
+# when the repository is cloned on Windows.
+*.sh text eol=lf
+Makefile text eol=lf

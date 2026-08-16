@@ -1,2 +1,10 @@
-# For emails von xxx@yourdomain.tld use key 'yourdomain' 
-*@yourdomain.tld yourdomain
+# Send every sender address to the single "dkim" key record in key.table,
+# which resolves the actual key per domain via "%" substitution.
+#
+# This is loaded as refile:, so the left hand side is a wildcard pattern that
+# is matched against the From: header address.
+#
+# If a build ever turns out not to treat "*@*" as a catch-all, switch
+# SigningTable in /etc/opendkim.conf from refile: to file: and use a bare "*"
+# here instead -- for a plain file the documented lookup sequence ends in "*".
+*@* dkim
