@@ -98,7 +98,7 @@ RUN chmod a+x /usr/local/bin/dkim-sync.sh /usr/local/bin/dkim-watch.sh \
     && chown -R opendkim:opendkim /etc/opendkim /var/run/opendkim \
     && chmod 0700 /etc/opendkim/keys
 
-VOLUME ["maildir:/var/vmail", "spool_mail:/var/spool/mail", "spool_postfix:/var/spool/postfix", "sqlite:${SQLITE_PATH}"]
+VOLUME ["/var/vmail", "/var/spool/mail", "/var/spool/postfix", "${SQLITE_PATH}"]
 
 EXPOSE 25 143 465 587 993 4190 11334 80
 
