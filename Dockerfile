@@ -26,11 +26,18 @@ ENV DKIM_AUTODISCOVER=true
 ENV DKIM_CHECK_INTERVAL=300
 ENV DKIM_NOTIFY_INTERVAL=86400
 
-# Set PHP install sources
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates apt-transport-https wget gnupg2 \
-    && wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add - \
-    && echo "deb https://packages.sury.org/php/ buster main" | tee /etc/apt/sources.list.d/php.list \
+# Debian 10 has reached end of life: deb.debian.org answers 404 for buster and
+# only archive.debian.org still serves it. Its Release files are expired by
+# definition, hence Check-Valid-Until.
+#
+# packages.sury.org dropped buster as well, so PHP 7.4 cannot be installed from
+# there any more and Debian's own PHP 7.3 is used instead.
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list \
+    && echo "deb http://archive.debian.org/debian buster-updates main" >> /etc/apt/sources.list \
+    && echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list \
+    && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archive/*.deb
 
@@ -43,7 +50,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     opendkim opendkim-tools dns-root-data dnsutils \
     sqlite3 \
     dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d dovecot-lmtpd \
-    php7.4-fpm php7.4-cli php7.4-mbstring php7.4-imap php7.4-sqlite3 \
+    php7.3-fpm php7.3-cli php7.3-mbstring php7.3-imap php7.3-sqlite3 \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
@@ -88,7 +95,7 @@ COPY config/opendkim/key.table.tpl /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
 COPY config/opendkim/dkim-sync.sh config/opendkim/dkim-watch.sh /usr/local/bin/
-COPY config/php/* /etc/php/7.4/fpm/pool.d/
+COPY config/php/* /etc/php/7.3/fpm/pool.d/
 
 # The Debian package does not create the key directory, and /var/run/opendkim is
 # normally set up by systemd-tmpfiles, which does not run here -- without it
