@@ -1,9 +1,14 @@
-FROM debian:10-slim
+FROM debian:12-slim
 
 LABEL description "Simple mailserver in a mono Docker image" \
       maintainer "behringer24 <abe@activecube.de>"
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+# Set early on purpose: several RUN steps below pipe a download into tar, and
+# without pipefail a failed download would be masked by tar's exit status and
+# silently produce a broken image.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV SQLITE_PATH=/etc/postfix/sqlite
 ENV SQLITE_DB=${SQLITE_PATH}/postfixadmin.db
@@ -26,23 +31,9 @@ ENV DKIM_AUTODISCOVER=true
 ENV DKIM_CHECK_INTERVAL=300
 ENV DKIM_NOTIFY_INTERVAL=86400
 
-# Debian 10 has reached end of life: deb.debian.org answers 404 for buster and
-# only archive.debian.org still serves it. Its Release files are expired by
-# definition, hence Check-Valid-Until.
-#
-# packages.sury.org dropped buster as well, so PHP 7.4 cannot be installed from
-# there any more and Debian's own PHP 7.3 is used instead.
-RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list \
-    && echo "deb http://archive.debian.org/debian buster-updates main" >> /etc/apt/sources.list \
-    && echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list \
-    && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archive/*.deb
-
 # Install packages
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    ca-certificates wget \
     make \
     postfix postfix-sqlite \
     nginx \
@@ -50,13 +41,13 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
     opendkim opendkim-tools dns-root-data dnsutils \
     sqlite3 \
     dovecot-core dovecot-imapd dovecot-sqlite dovecot-pop3d dovecot-lmtpd \
-    php7.3-fpm php7.3-cli php7.3-mbstring php7.3-imap php7.3-sqlite3 \
+    php8.2-fpm php8.2-cli php8.2-mbstring php8.2-imap php8.2-sqlite3 \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/debconf/*-old
 
 # Setup SQLite database and paths
-RUN mkdir /run/php \
+RUN mkdir -p /run/php \
     && groupadd -g 5000 vmail \
     && useradd -g vmail -u 5000 vmail -d /var/vmail \
     && mkdir /var/vmail \
@@ -65,23 +56,34 @@ RUN mkdir /run/php \
     && touch ${SQLITE_DB} \
     && chown -R www-data:www-data ${SQLITE_PATH}
 
-# Install postfixadmin from source and extract to docroot
-RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/refs/tags/postfixadmin-3.3.10.tar.gz" \
-     | tar -xvzf - -C /var/www/html --strip-components=1 \
+# Install postfixadmin from source and extract to docroot.
+#
+# Stays on the 3.3 branch: it supports PHP 7.0 up to 8.x and its source archive
+# runs without a composer install, which is why no composer is needed in this
+# image. The 4.0 branch ships PHP-version-specific release tarballs with a
+# prebuilt vendor/ instead, and its database upgrade is known to be inconsistent
+# with the 3.3 branch (postfixadmin issue #971), so moving to it is a separate
+# decision, not part of the Debian bump.
+RUN wget -q -O - "https://github.com/postfixadmin/postfixadmin/archive/refs/tags/postfixadmin-3.3.16.tar.gz" \
+     | tar -xzf - -C /var/www/html --strip-components=1 \
     && mkdir /var/www/html/templates_c \
     && chown -R www-data:www-data /var/www/html/templates_c 
 
-# Install envproc config file preprocessor
-ADD https://raw.githubusercontent.com/behringer24/envproc/master/envproc /usr/local/bin/
-RUN chmod a+x /usr/local/bin/envproc
-
-# Install debug packages // remove in prod
-RUN apt-get update && apt-get install -y -q \
-    procps \
-    nano \
-    less
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Install the envproc config file preprocessor, in its Go flavour
+# (behringer24/envprocgo). The original Python envproc starts with
+# "/usr/bin/env python", and Debian 12 has no "python" executable any more:
+# supervisor pulls in python3 only, so the templates would fail to render and
+# the container would not boot. The Go port is a single static binary with the
+# same ${env:VAR} syntax and the same abort on an unset variable, which means
+# the templates themselves stay untouched.
+#
+# Upstream publishes linux-386 and linux-amd64 only. That is fine as long as
+# .github/workflows/docker-image.yml builds for a single architecture; adding
+# another platform there means revisiting this line.
+ARG ENVPROC_VERSION=v1.0.7
+RUN wget -qO- "https://github.com/behringer24/envprocgo/releases/download/${ENVPROC_VERSION}/envproc-${ENVPROC_VERSION}-linux-amd64.tar.gz" \
+     | tar -xzf - -C /usr/local/bin envproc \
+    && chmod a+x /usr/local/bin/envproc
 
 COPY config/make/Makefile /root/
 COPY config/nginx/default /etc/nginx/sites-available
@@ -95,7 +97,7 @@ COPY config/opendkim/key.table.tpl /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
 COPY config/opendkim/dkim-sync.sh config/opendkim/dkim-watch.sh /usr/local/bin/
-COPY config/php/* /etc/php/7.3/fpm/pool.d/
+COPY config/php/* /etc/php/8.2/fpm/pool.d/
 
 # The Debian package does not create the key directory, and /var/run/opendkim is
 # normally set up by systemd-tmpfiles, which does not run here -- without it
