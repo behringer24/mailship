@@ -25,6 +25,19 @@ service auth {
   user = root
 }
 
+# The LDA runs as vmail and reports to this socket after every delivery. Its
+# default owner is root with mode 0600, so without this block each delivered
+# mail logs "net_connect_unix(/run/dovecot/stats-writer) failed: Permission
+# denied". Delivery itself succeeds either way -- only the statistics are lost,
+# at the price of one error line per mail.
+service stats {
+  unix_listener stats-writer {
+    user = vmail
+    group = vmail
+    mode = 0660
+  }
+}
+
 ssl = yes
 ssl_cert = <${env:SSL_CERT}
 ssl_key = <${env:SSL_KEY}
