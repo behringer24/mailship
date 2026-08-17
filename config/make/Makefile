@@ -15,11 +15,17 @@
 #  used: it also chowns manual pages, which this slim image does not ship, and
 #  aborts there.
 #
-#  The last steps create missing DKIM keys before supervisord starts. Both the
-#  permission fix and the DKIM step are prefixed with "-" so that neither can
-#  keep the mail server from booting: the container's CMD is
-#  "make && supervisord", so a failing recipe line would stop the whole image.
-#  Errors are still printed.
+#  Then prepare Roundcube's writable side -- database schema, des_key, temp and
+#  log directories -- which lives in a volume and can therefore not be done at
+#  build time. The script is idempotent and only fixes ownership on an existing
+#  installation.
+#
+#  The last steps create missing DKIM keys before supervisord starts. The
+#  permission fix, the Roundcube step and the DKIM step are all prefixed with
+#  "-" so that none of them can keep the mail server from booting: the
+#  container's CMD is "make && supervisord", so a failing recipe line would stop
+#  the whole image. A webmailer that fails to initialise must not take mail
+#  delivery down with it. Errors are still printed.
 ##
 
 config:
@@ -40,5 +46,7 @@ config:
 	-chgrp postdrop /var/spool/postfix/maildrop /var/spool/postfix/public
 	-chmod 1730 /var/spool/postfix/maildrop
 	-chmod 2710 /var/spool/postfix/public
+
+	-sh /usr/local/bin/roundcube-init.sh
 
 	@-sh /usr/local/bin/dkim-sync.sh
