@@ -16,6 +16,23 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
+# TLS is terminated by the reverse proxy in front of this container, so nginx
+# here only ever sees plain HTTP and $https stays empty. PHP applications then
+# believe the connection is insecure: they omit the "secure" flag on session
+# cookies and build absolute URLs with http://, which browsers block as mixed
+# content. Deriving HTTPS from the proxy's own header fixes that for every
+# application at once, Postfixadmin included -- unlike an application setting
+# such as Roundcube's use_https, which each application would need separately.
+#
+# Trusting the header is sound in this setup: port 80 is only exposed, never
+# published, so the container is reachable through the proxy and nothing else.
+# It also stays conditional -- a request that genuinely arrives over HTTP is not
+# mislabelled as secure.
+map $http_x_forwarded_proto $fcgi_https {
+        default '';
+        https   on;
+}
+
 # Default server configuration
 #
 server {
@@ -55,7 +72,12 @@ server {
         #
         location ~ \.php$ {
                include snippets/fastcgi-php.conf;
-        
+
+               # Must come after the include: fastcgi.conf already sets HTTPS
+               # from $https, which is empty here, so that line sends nothing
+               # and this one does not collide with it.
+               fastcgi_param HTTPS $fcgi_https if_not_empty;
+
                # With php-fpm (or other unix sockets):
                fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         #       # With php-cgi (or other tcp sockets):
