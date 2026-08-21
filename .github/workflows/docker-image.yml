@@ -5,6 +5,7 @@ on:
     branches: [ master, development ]
   pull_request:
     branches: [ master, development ]
+  workflow_dispatch:
 
 jobs:
 
@@ -12,22 +13,52 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Docker login
-      env:
-        DOCKER_USER: ${{secrets.DOCKER_USER}}
-        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-      run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag behringer24/mailship:latest
-      if: github.ref_name == 'master'
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag behringer24/mailship:canary
-      if: github.ref_name == 'development'
-    - name: Docker push
-      run: docker push ${{secrets.DOCKER_USER}}/mailship:latest
-      if: github.ref_name == 'master'
-    - name: Docker push
-      run: docker push ${{secrets.DOCKER_USER}}/mailship:canary
-      if: github.ref_name == 'development'
+    - uses: actions/checkout@v4
+
+    - uses: docker/setup-buildx-action@v3
+
+    # GITHUB_TOKEN is enough for ghcr.io, no secret needed. Pull requests only
+    # build, they never push, so forks without the Docker Hub secrets pass.
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # master -> :latest, development -> :canary, plus an immutable :sha-xxxxxxx
+    # on every build to allow a rollback to a specific commit.
+    - name: Collect tags and labels
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          ghcr.io/${{ github.repository }}
+          behringer24/mailship
+        tags: |
+          type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
+          type=raw,value=canary,enable=${{ github.ref_name == 'development' }}
+          type=sha,prefix=sha-,format=short
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

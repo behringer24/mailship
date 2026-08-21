@@ -16,6 +16,23 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
+# TLS is terminated by the reverse proxy in front of this container, so nginx
+# here only ever sees plain HTTP and $https stays empty. PHP applications then
+# believe the connection is insecure: they omit the "secure" flag on session
+# cookies and build absolute URLs with http://, which browsers block as mixed
+# content. Deriving HTTPS from the proxy's own header fixes that for every
+# application at once, Postfixadmin included -- unlike an application setting
+# such as Roundcube's use_https, which each application would need separately.
+#
+# Trusting the header is sound in this setup: port 80 is only exposed, never
+# published, so the container is reachable through the proxy and nothing else.
+# It also stays conditional -- a request that genuinely arrives over HTTP is not
+# mislabelled as secure.
+map $http_x_forwarded_proto $fcgi_https {
+        default '';
+        https   on;
+}
+
 # Default server configuration
 #
 server {
@@ -55,11 +72,58 @@ server {
         #
         location ~ \.php$ {
                include snippets/fastcgi-php.conf;
-        
+
+               # Must come after the include: fastcgi.conf already sets HTTPS
+               # from $https, which is empty here, so that line sends nothing
+               # and this one does not collide with it.
+               fastcgi_param HTTPS $fcgi_https if_not_empty;
+
                # With php-fpm (or other unix sockets):
-               fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+               fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         #       # With php-cgi (or other tcp sockets):
         #       fastcgi_pass 127.0.0.1:9000;
+        }
+
+        # Roundcube webmail.
+        #
+        # "^~" is essential: it makes this prefix win over the regex location
+        # for .php above, which would otherwise run Roundcube's scripts with
+        # Postfixadmin's document root.
+        #
+        # Because alias is used, SCRIPT_FILENAME cannot come from
+        # snippets/fastcgi-php.conf -- that builds it from $document_root plus
+        # the full request path and would look for the file inside a second
+        # "webmail" directory. Named captures give the pieces to set it, and
+        # PATH_INFO, explicitly; Roundcube needs PATH_INFO because static.php
+        # serves all assets through it.
+        location ^~ /webmail {
+               alias /var/www/webmail/public_html;
+               index index.php;
+
+               # The one rewrite from Roundcube's shipped .htaccess.
+               location = /webmail/favicon.ico {
+                      rewrite ^ /webmail/static.php/skins/elastic/images/favicon.ico last;
+               }
+
+               location ~ ^/webmail/(?<rcscript>[^/]+\.php)(?<rcinfo>/.*)?$ {
+                      include fastcgi_params;
+                      fastcgi_param SCRIPT_FILENAME /var/www/webmail/public_html/$rcscript;
+                      fastcgi_param SCRIPT_NAME /webmail/$rcscript;
+                      fastcgi_param PATH_INFO $rcinfo;
+                      fastcgi_param HTTPS $fcgi_https if_not_empty;
+                      fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+               }
+
+               # Roundcube asks not to be indexed; its .htaccess does the same.
+               add_header X-Robots-Tag "noindex, nofollow" always;
+
+               # Deliberately no try_files. Inside an alias location it resolves
+               # $uri against the alias incorrectly -- a long standing nginx
+               # quirk -- and a request that matches nothing then falls through
+               # to Postfixadmin instead of returning 404. Roundcube does not
+               # need a front controller fallback anyway: every request is
+               # either a real file in public_html or an asset that static.php
+               # serves through PATH_INFO. "index" alone covers /webmail/.
         }
 
         # deny access to .htaccess files, if Apache's document root

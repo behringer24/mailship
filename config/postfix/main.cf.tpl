@@ -41,3 +41,10 @@ mailbox_size_limit = 0
 message_size_limit = 0
 
 dovecot_destination_recipient_limit = 1
+
+# OpenDKIM milter. Set DKIM_MILTER="" to disable all milters.
+# non_smtpd_milters covers locally injected mail (cron, PHP mail(), sendmail),
+# which Postfix presents to the milter as localhost [127.0.0.1].
+milter_default_action = accept
+smtpd_milters = ${env:DKIM_MILTER}
+non_smtpd_milters = ${env:DKIM_MILTER}
