@@ -40,7 +40,12 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     # master -> :latest, development -> :canary, plus an immutable :sha-xxxxxxx
-    # on every build to allow a rollback to a specific commit.
+    # on every push to allow a rollback to a specific commit.
+    #
+    # A manual run (workflow_dispatch) rebuilds an unchanged commit, usually to
+    # pick up Debian security updates. It must not overwrite that commit's
+    # :sha-xxxxxxx -- that would silently swap the rollback target -- so it is
+    # tagged :sha-xxxxxxx-YYYYMMDD-HHmm (UTC) instead.
     - name: Collect tags and labels
       id: meta
       uses: docker/metadata-action@v5
@@ -51,14 +56,19 @@ jobs:
         tags: |
           type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
           type=raw,value=canary,enable=${{ github.ref_name == 'development' }}
-          type=sha,prefix=sha-,format=short
+          type=sha,prefix=sha-,format=short,enable=${{ github.event_name != 'workflow_dispatch' }}
+          type=raw,value=sha-{{sha}}-{{date 'YYYYMMDD-HHmm'}},enable=${{ github.event_name == 'workflow_dispatch' }}
 
+    # No layer cache: the image is mostly Debian packages, and a cached
+    # apt-get layer keeps shipping the packages of whichever build first
+    # filled the cache, however many security updates Debian has released
+    # since. pull re-resolves debian:12-slim for the same reason.
     - name: Build and push
       uses: docker/build-push-action@v6
       with:
         context: .
+        pull: true
+        no-cache: true
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
