@@ -155,6 +155,26 @@ container is recreated.
   off: it would redirect and, behind a proxy that already serves HTTPS, produce
   a redirect loop.
 
+## TLS certificates
+
+Postfix and Dovecot use the certificate and key given in `SSL_CERT` and
+`SSL_KEY`. They read these files only when they start, so a certificate that is
+renewed while the container keeps running -- for example by acme-companion,
+with its `certs` volume mounted read-only -- would otherwise only be picked up
+by the next restart. Dovecot would keep presenting the old one until it
+expires.
+
+A watcher checks both files every `CERT_CHECK_INTERVAL` seconds and reloads
+Dovecot and Postfix once they have changed, stopped changing and belong
+together. A half written renewal is left alone and checked again on the next
+round. Look for `cert-watch:` in the container log.
+
+| Variable | Default | Description |
+|---|---|---|
+| `SSL_CERT` | *(required)* | Certificate, or full chain, for Postfix and Dovecot. |
+| `SSL_KEY` | *(required)* | Matching private key. |
+| `CERT_CHECK_INTERVAL` | `900` | Seconds between two checks for a renewed certificate. |
+
 ## DKIM
 
 Mailship signs outgoing mail with DKIM. Keys are created automatically for every

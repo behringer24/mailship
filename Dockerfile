@@ -31,6 +31,10 @@ ENV DKIM_AUTODISCOVER=true
 ENV DKIM_CHECK_INTERVAL=300
 ENV DKIM_NOTIFY_INTERVAL=86400
 
+# Seconds between two checks of SSL_CERT/SSL_KEY for a renewed certificate,
+# see config/tls/cert-watch.sh.
+ENV CERT_CHECK_INTERVAL=900
+
 # Roundcube. ROUNDCUBE_DES_KEY encrypts session contents and, through the
 # identity_switch plugin, the passwords of a user's additional accounts. Left
 # empty it is generated once into the volume by roundcube-init.sh, so that an
@@ -133,6 +137,7 @@ COPY config/opendkim/key.table.tpl /etc/opendkim/
 COPY config/opendkim/signing.table /etc/opendkim/
 COPY config/opendkim/trusted /etc/opendkim/
 COPY config/opendkim/dkim-sync.sh config/opendkim/dkim-watch.sh /usr/local/bin/
+COPY config/tls/cert-watch.sh /usr/local/bin/
 COPY config/php/* /etc/php/8.2/fpm/pool.d/
 COPY config/roundcube/config.inc.php /var/www/webmail/config/
 COPY config/roundcube/roundcube-init.sh /usr/local/bin/
@@ -140,7 +145,7 @@ COPY config/roundcube/roundcube-init.sh /usr/local/bin/
 # The Debian package does not create the key directory, and /var/run/opendkim is
 # normally set up by systemd-tmpfiles, which does not run here -- without it
 # opendkim cannot write the PidFile from opendkim.conf.
-RUN chmod a+x /usr/local/bin/dkim-sync.sh /usr/local/bin/dkim-watch.sh /usr/local/bin/roundcube-init.sh \
+RUN chmod a+x /usr/local/bin/dkim-sync.sh /usr/local/bin/dkim-watch.sh /usr/local/bin/roundcube-init.sh /usr/local/bin/cert-watch.sh \
     && mkdir -p /etc/opendkim/keys /var/run/opendkim \
     && chown -R opendkim:opendkim /etc/opendkim /var/run/opendkim \
     && chmod 0700 /etc/opendkim/keys
